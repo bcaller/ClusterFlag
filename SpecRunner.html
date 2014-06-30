@@ -1,0 +1,46 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="vendor/bower/mocha/mocha.css"/>
+    <script src="vendor/bower/mocha/mocha.js"></script>
+    <script>mocha.setup('bdd')</script>
+    <script>
+        function assert(expr, msg) {
+            if (!expr) throw new Error(msg || 'failed');
+        }
+    </script>
+
+    <script type="text/javascript" src="vendor/bower/should/should.js"></script>
+    <script type="text/javascript" src="vendor/bower/lodash/dist/lodash.js"></script>
+    <script type="text/javascript">
+        var ClusterFlag = {};
+    </script>
+    <!-- include source files here... -->
+    <!-- build:js source.min.js -->
+    <script type="text/javascript" src="src/util.js"></script>
+    <script type="text/javascript" src="src/Projection.js"></script>
+    <script type="text/javascript" src="src/DistanceGrid.js"></script>
+    <script type="text/javascript" src="src/Cluster.js"></script>
+    <script type="text/javascript" src="src/ClusterFuck.js"></script>
+    <!-- endbuild -->
+    <!-- /build -->
+
+    <script type="text/javascript" src="test/MapLatLng.js"></script>
+    <script type="text/javascript" src="test/MapBounds.js"></script>
+    <script type="text/javascript" src="test/config.js"></script>
+
+    <!-- include spec files here... -->
+    <script type="text/javascript" src="test/DistanceGrid.js"></script>
+    <script type="text/javascript" src="test/Cluster.js"></script>
+    <script type="text/javascript" src="test/ClusterFuck.js"></script>
+    <script>
+        onload = function () {
+            mocha.run();
+        };
+    </script>
+</head>
+
+<body>
+<div id="mocha"></div>
+</body>
+</html>

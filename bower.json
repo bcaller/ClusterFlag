@@ -1,0 +1,10 @@
+{
+    "name": "ClusterFlag",
+
+    "devDependencies": {
+        "lodash": "~2.4.1",
+
+        "mocha": "*",
+        "should": "git://github.com/shouldjs/should.js.git"
+    }
+}

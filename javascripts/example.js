@@ -73,7 +73,7 @@ function addMarkers() {
                 position: item.centreOfMass,
                 map: map,
                 title: "Cluster " + item.id + " contains " + item.count + " markers total (" + item.blueDescendants + " blue and " + item.redDescendants + " red)",
-                icon: getShape(item.overallColour, true, 1 + item.count / max )
+                icon: getShape(item.overallColour, true, 1 + (item.count / max) * (item.count / max) )
             })
             google.maps.event.addListener(marker, 'click', function () {
                 map.panTo(item.centreOfMass)

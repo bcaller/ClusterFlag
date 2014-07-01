@@ -74,7 +74,7 @@ function addMarkers() {
                 position: item.centreOfMass,
                 map: map,
                 title: "Cluster " + item.id + " contains " + item.count + " markers total (" + item.blueDescendants + " blue and " + item.redDescendants + " red)",
-                icon: getShape(item.overallColour, true, 1 + (item.count / max) * (item.count / max))
+                icon: getShape(item.overallColour, true, 1 + (item.count / max) * (item.count / max), item.count > 5)
             })
             google.maps.event.addListenerOnce(marker, 'click', function () {
                 var coords = [
@@ -101,7 +101,7 @@ function addMarkers() {
                 position: item.latlng,
                 map: map,
                 title: "Marker " + item.id,
-                icon: getShape(item.colour, false, 1)
+                icon: getShape(item.colour, false, 1, true)
             })
             google.maps.event.addListener(marker, 'click', function () {
                 infowindow.setContent(marker.getTitle())
@@ -120,19 +120,19 @@ function clearOverlays() {
     }
 }
 
-function getShape(colour, isCluster, size) {
+function getShape(colour, isCluster, size, stroke) {
     return {
         strokeColor: 'black',
         fillColor: colour === 'blue' ? '#0041C2' : '#ba0000',
         path: isCluster ? 'M-4 -17.2L-8.7 -3.6 -23.1 -3.3 -11.6 5.4 -15.8 19.2 -4 11 7.9 19.2 3.7 5.4 15.2 -3.3 0.8 -3.6z' : google.maps.SymbolPath.CIRCLE,
         strokeWeight: 2,
         scale: (isCluster ? 0.6 : 4) * size,
-        strokeOpacity: 0.9,
+        strokeOpacity: stroke ? 0.9 : 0.1,
         fillOpacity: 0.6
     }
 }
 
-
+//Locations to add markers to
 var somelatlngs = [
     [32.7990, -86.8073],
     [40.5773, -77.2640],
@@ -188,7 +188,6 @@ var somelatlngs = [
     [58.957778, -2.905],
     [50.45, 30.5233],
     [50.03597, -122.959],
-    [43.8345, -120.7178],
     [38.2511, -85.7593]
 ];
 
@@ -204,20 +203,47 @@ function addRandomData(num) {
 
     //add random data by random walk
     var j = 0
-    _(somelatlngs).each(function (centre) {
-        var pos = [centre[0] + avgRandom(12), centre[1] + avgRandom(12)]
-        for (var i = 0; i < (3 + Math.random()) * num; i++) {
+
+    function markovianRandomWalk(howManyMarkers, pos) {
+        for (var i = 0; i < howManyMarkers; i++) {
             //Add some random marker points
             clusterFuck.add({
                 id: ++j,
                 latlng: new google.maps.LatLng(pos[0], pos[1]),
-                colour: Math.random() > 0.501 ? 'red' : 'blue'
+                colour: Math.random() > 0.6 ? 'red' : 'blue'
             })
             pos[0] += avgRandom(6) / 30
             pos[1] += avgRandom(6) / 30
         }
+    }
+
+    function nonMarkovianWalk(howManyMarkers, pos) {
+        var velocity = [0, 0]
+        for (var i = 0; i < howManyMarkers; i++) {
+            //Add some random marker points
+            clusterFuck.add({
+                id: ++j,
+                latlng: new google.maps.LatLng(pos[0], pos[1]),
+                colour: Math.random() > 0.4 ? 'red' : 'blue'
+            })
+            //Weighted average with historical velocity
+            velocity[0] = (avgRandom(6) / 5 + velocity[0]) / 5
+            velocity[1] = (avgRandom(6) / 5 + velocity[0]) / 5
+            pos[0] += velocity[0]
+            pos[1] += velocity[1]
+        }
+    }
+
+    _(somelatlngs).each(function (centre) {
+        var howManyMarkers = (3 + Math.random()) * num;
+        markovianRandomWalk(howManyMarkers * 0.55, [centre[0], centre[1]]);
+        nonMarkovianWalk(howManyMarkers * 0.45, [centre[0], centre[1]]);
     })
 
+    //Fewer markers over Oregon
+    markovianRandomWalk(num / 10, [43.8345, -120.7178]);
+
+    //One point over Havana, Cuba
     clusterFuck.add({
         id: ++j,
         latlng: new google.maps.LatLng(23.054, -82.299),
@@ -229,24 +255,22 @@ function addRandomData(num) {
 
 var clicked = false
 
-document.getElementById('click').onclick = function () {
-    if (clicked) return false
-    clicked = true
-    populateClusterer(1234);
-    window.setTimeout(function () {
-        document.getElementById('ok').remove()
-    }, 3000)
-    return false
+function clusterIt(points) {
+    return function () {
+        if (clicked) return false
+        clicked = true
+        document.getElementById('ok').innerText = "Randomising and clustering"
+        window.setTimeout(function() {
+            populateClusterer(points);
+            window.setTimeout(function () {
+                document.getElementById('ok').remove()
+            }, 3000)
+        }, 100)
+        return false
+    }
 }
 
-document.getElementById('clickless').onclick = function () {
-    if (clicked) return false
-    clicked = true
-    populateClusterer(123);
-    window.setTimeout(function () {
-        document.getElementById('ok').remove()
-    }, 3000)
-    return false
-}
+document.getElementById('click').onclick = clusterIt(1234)
+document.getElementById('clickless').onclick = clusterIt(123)
 
 renderMap();

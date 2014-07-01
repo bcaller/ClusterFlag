@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Clusterflag by bcaller</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Clusterflag</h1>
+        <p>Fast marker clustering for Google Maps supporting hundreds of thousands of markers</p>
+
+        <p class="view"><a href="https://github.com/bcaller/ClusterFlag">View the Project on GitHub <small>bcaller/ClusterFlag</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/bcaller/ClusterFlag/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/bcaller/ClusterFlag/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/bcaller/ClusterFlag">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="clusterflag" class="anchor" href="#clusterflag"><span class="octicon octicon-link"></span></a>ClusterFlag</h1>
+
+<p>Clusters LatLng points to allow a map to display different numbers of markers at different zoom levels. Built with the fast retrieval of hundreds of thousands of Google Maps markers in mind.</p>
+
+<p>Originally developed for a personal project <a href="http://theyhaveyour.info">TheyHaveYour.Info</a> which required a clusterer for Google Maps capable of fast browsing and aggregation of 200,000+ map markers.</p>
+
+<p>No production dependencies required.</p>
+
+<p>Even if it takes a few seconds to actually cluster 200000 markers, once it's done you can zoom the map it doesn't need to recalculate (unlike MarkerClusterer in google-maps-utility-library-v3) - browsing the map with ClusterFlag is fast! This greedy clustering algorithm is heavily based on the wonderful <a href="https://github.com/Leaflet/Leaflet.markercluster">Leaflet.markercluster</a> (MIT License).</p>
+
+<h2>
+<a name="using-clusterflag" class="anchor" href="#using-clusterflag"><span class="octicon octicon-link"></span></a>Using ClusterFlag</h2>
+
+<p>Include the javascript file which will set the global variable <code>ClusterFlag</code>.
+<em>Including the script within an IIFE will make the variable non-global.</em></p>
+
+<p>Include your mapping library and then import the <code>LatLng</code> and <code>LatLngBounds</code> classes into ClusterFlag, e.g.</p>
+
+<p><code>ClusterFlag.setImports(google.maps.LatLng, google.maps.LatLngBounds);</code></p>
+
+<p>The LatLng class must have <code>lat()</code> and <code>lng()</code> methods and constructor <code>LatLng(lat, lng)</code>.
+The LatLngBounds class must have constructor <code>LatLngBounds(NE, SW)</code> and methods <code>getSouthWest()</code>, <code>getNorthEast()</code>, <code>contains(latlng)</code>, <code>intersects(bounds)</code>, <code>extend(latlng)</code> and <code>union(bounds)</code>
+If you aren't using Google Maps or a mapping library, you can use the <code>MapLatLng</code> and <code>MapBounds</code> classes included in the test folder.</p>
+
+<h3>
+<a name="creating-clusterer" class="anchor" href="#creating-clusterer"><span class="octicon octicon-link"></span></a>Creating Clusterer</h3>
+
+<p>To create the clusterer use <code>var cf = new ClusterFlag.Clusterer(maxZoom, clusterWidth)</code> where:</p>
+
+<ul>
+<li>
+<strong>maxZoom</strong> - Maximum zoom level to calculate clusters for. Level 0 shows the whole world on the map.
+On each subsequent zoom level the number of pixels in the world quadruples. If max zoom is too large, too many levels will be created and adding markers will be very slow. However, the <code>get</code> method shouldn't suffer.</li>
+<li>
+<strong>clusterWidth</strong> - Smaller values causes more markers to be shown (more dense). A good starting value is 0.5.</li>
+</ul><h3>
+<a name="clustering" class="anchor" href="#clustering"><span class="octicon octicon-link"></span></a>Clustering</h3>
+
+<p>Each marker added to the clusterer can have any properties, but must always have:</p>
+
+<ul>
+<li>
+<strong>id</strong> - a unique ID (any type)</li>
+<li>
+<strong>latlng</strong> - a LatLng object specifying the object's position</li>
+</ul><p>To add a marker <code>cf.add(marker)</code>
+When everything has been added you can call <code>cf.finish()</code> to clean up temporary arrays which are only required if adding more items and to calculate aggregate properties such as child count and centre of mass.</p>
+
+<h3>
+<a name="getting-markers" class="anchor" href="#getting-markers"><span class="octicon octicon-link"></span></a>Getting markers</h3>
+
+<p>On map events such as zooming or dragging, call <code>cf.get(map.getBounds() : LatLngBounds, zoomLevel)</code> to return an array containing marker objects (the same as you added to the clusterer) and Cluster objects. <strong>Actually displaying the results on the map is your problem</strong> although a basic example app is included!</p>
+
+<h4>
+<a name="cluster-objects" class="anchor" href="#cluster-objects"><span class="octicon octicon-link"></span></a>Cluster objects</h4>
+
+<p>A cluster object has the following properties populated:</p>
+
+<ul>
+<li>
+<strong>id</strong> - A unique ID</li>
+<li>
+<strong>centreOfMass</strong> - Approximate LatLng of the centre of this cluster</li>
+<li>
+<strong>markers</strong> - Array of marker objects which are children of this cluster (not children of children)</li>
+<li>
+<strong>childClusters</strong> - Array of clusters which are hidden within the current cluster at this zoom level</li>
+<li>
+<strong>count</strong> - Total number of marker objects contained within this cluster and its children (available after finish has been called)</li>
+<li>
+<strong>zoom</strong> - Zoom level of this cluster</li>
+<li>
+<strong>bounds</strong> - LatLngBounds</li>
+<li>
+<strong>isCluster</strong> - true</li>
+<li>
+<strong>parent</strong> - Cluster object which is the direct parent of this cluster.
+The top level cluster (<code>cf.top</code>) has zoom = -1 and parent = null</li>
+</ul><h3>
+<a name="accumulating-aggregate-properties" class="anchor" href="#accumulating-aggregate-properties"><span class="octicon octicon-link"></span></a>Accumulating Aggregate Properties</h3>
+
+<p>Calculate aggregate properties of clusters using <code>accumulate(acc, marker, cluster, finish)</code> as seen in Cluster.js.
+Used in <code>Cluster.recalculateBounds</code> to calculate and attach the <code>bounds</code>, <code>count</code> and <code>centreOfMass</code> properties of clusters.
+Example to calculate the number of blue and green markers and to attach the result to each cluster object:</p>
+
+<div class="highlight highlight-javascript"><pre>
+    <span class="nx">cf</span><span class="p">.</span><span class="nx">accumulate</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="nx">blue</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">green</span><span class="o">:</span> <span class="mi">0</span>
+        <span class="p">}</span>
+    <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">accum</span><span class="p">,</span> <span class="nx">marker</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">//Our markers will of course need to have a color property</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">marker</span><span class="p">.</span><span class="nx">color</span> <span class="o">===</span> <span class="s1">'blue'</span><span class="p">)</span>
+            <span class="nx">accum</span><span class="p">.</span><span class="nx">blue</span><span class="o">++</span>
+        <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">marker</span><span class="p">.</span><span class="nx">color</span> <span class="o">===</span> <span class="s1">'green'</span><span class="p">)</span>
+            <span class="nx">accum</span><span class="p">.</span><span class="nx">green</span><span class="o">++</span>
+    <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">accum</span><span class="p">,</span> <span class="nx">childCluster</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">accum</span><span class="p">.</span><span class="nx">blue</span> <span class="o">+=</span> <span class="nx">childCluster</span><span class="p">.</span><span class="nx">blueDescendants</span>
+        <span class="nx">accum</span><span class="p">.</span><span class="nx">green</span> <span class="o">+=</span> <span class="nx">childCluster</span><span class="p">.</span><span class="nx">greenDescendants</span>
+    <span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="nx">accum</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">//Every cluster will now have the following properties</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">blueDescendants</span> <span class="o">=</span> <span class="nx">accum</span><span class="p">.</span><span class="nx">blue</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">greenDescendants</span> <span class="o">=</span> <span class="nx">accum</span><span class="p">.</span><span class="nx">green</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">overallColor</span> <span class="o">=</span> <span class="nx">accum</span><span class="p">.</span><span class="nx">blue</span> <span class="o">&gt;=</span> <span class="nx">accum</span><span class="p">.</span><span class="nx">green</span> <span class="o">?</span> <span class="s1">'blue'</span> <span class="o">:</span> <span class="s1">'green'</span><span class="p">;</span>
+    <span class="p">})</span>
+</pre></div>
+
+<h3>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h3>
+
+<p>Copyright 2014 Benjamin Caller</p>
+
+<p>ClusterFlag is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.</p>
+
+<p>ClusterFlag is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.</p>
+
+<p>You should have received a copy of the GNU General Public License
+along with ClusterFlag.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p>
+
+<p>For alternative licensing please contact me.
+Also it'd be nice to know if you make use of this library in a project.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/bcaller">bcaller</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>

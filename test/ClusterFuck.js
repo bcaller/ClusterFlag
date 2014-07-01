@@ -19,7 +19,7 @@
 describe('Clustering', function () {
     describe('#add', function () {
         beforeEach(function () {
-            this.cf = new ClusterFlag.Clusterer(10, 0.9)
+            this.clusterFuck = new ClusterFlag.Clusterer(10, 0.9)
         })
 
         describe('one addition', function () {
@@ -28,13 +28,13 @@ describe('Clustering', function () {
                     latlng: new MapLatLng(-1, 1),
                     id: 'one'
                 }
-                this.cf.add(this.one)
+                this.clusterFuck.add(this.one)
             })
 
             it('should add to TLC', function () {
-                this.cf.finish()
-                this.cf.top.markers.length.should.eql(1)
-                this.one.parent.should.eql(this.cf.top)
+                this.clusterFuck.finish()
+                this.clusterFuck.top.markers.length.should.eql(1)
+                this.one.parent.should.eql(this.clusterFuck.top)
             })
 
             describe('second: cluster it', function () {
@@ -43,7 +43,7 @@ describe('Clustering', function () {
                         latlng: new MapLatLng(-2, 2),
                         id: 'two'
                     }
-                    this.cf.add(this.two)
+                    this.clusterFuck.add(this.two)
                     this.firstCluster = this.two.parent
                 })
 
@@ -53,11 +53,11 @@ describe('Clustering', function () {
                 })
 
                 it('should add clusters up to the TLC', function () {
-                    this.cf.top.markers.length.should.eql(0)
+                    this.clusterFuck.top.markers.length.should.eql(0)
                     this.firstCluster.parent.childClusters.length.should.eql(1)
 
-                    this.cf.mutualAncestor(this.firstCluster, this.cf.top.childClusters[0].childClusters[0])
-                        .should.eql(this.cf.top.childClusters[0])
+                    this.clusterFuck.mutualAncestor(this.firstCluster, this.clusterFuck.top.childClusters[0].childClusters[0])
+                        .should.eql(this.clusterFuck.top.childClusters[0])
                 })
 
                 describe('third: add to pre-existing cluster', function () {
@@ -66,7 +66,7 @@ describe('Clustering', function () {
                             latlng: new MapLatLng(1, 2),
                             id: 'three'
                         }
-                        this.cf.add(this.three)
+                        this.clusterFuck.add(this.three)
                     })
 
                     it('should add this cluster somewhere along the cluster chain', function () {
@@ -81,22 +81,22 @@ describe('Clustering', function () {
                     })
 
                     it('should not affect much else', function () {
-                        this.cf.top.markers.length.should.eql(0)
+                        this.clusterFuck.top.markers.length.should.eql(0)
                         this.firstCluster.markers.length.should.eql(2)
-                        this.cf.mutualAncestor(this.two.parent, this.three.parent).zoom
+                        this.clusterFuck.mutualAncestor(this.two.parent, this.three.parent).zoom
                             .should.eql(this.three.parent.zoom - 1)
                     })
 
                     it('should count on #finish', function () {
-                        this.cf.finish()
-                        this.cf.top.count.should.eql(3)
+                        this.clusterFuck.finish()
+                        this.clusterFuck.top.count.should.eql(3)
                         this.three.parent.count.should.eql(3)
                         this.one.parent.count.should.eql(2)
                     })
 
                     it('should prune on #finish', function () {
                         var exGrandparentOfThree = this.three.parent.parent
-                        this.cf.finish()
+                        this.clusterFuck.finish()
                         this.three.parent.parent.should.not.eql(exGrandparentOfThree)
                     })
 
@@ -107,7 +107,7 @@ describe('Clustering', function () {
                                 latlng: new MapLatLng(1.1, 2.2),
                                 id: 'four'
                             }
-                            this.cf.add(this.four)
+                            this.clusterFuck.add(this.four)
                         })
 
                         it('should connect three and four at very high zoom', function () {
@@ -120,14 +120,14 @@ describe('Clustering', function () {
 
                     describe('#get', function () {
                         beforeEach(function () {
-                            this.cf.finish()
+                            this.clusterFuck.finish()
                         })
 
                         describe('full MapLatLng range', function () {
                             beforeEach(function () {
-                                this.zoomOut = this.cf.get(new MapBounds(new MapLatLng(-3, -3), new MapLatLng(3, 3)), 1)
-                                this.zoomMedium = this.cf.get(new MapBounds(new MapLatLng(-3, -3), new MapLatLng(3, 3)), this.one.parent.zoom)
-                                this.zoomIn = this.cf.get(new MapBounds(new MapLatLng(-3, -3), new MapLatLng(3, 3)), this.one.parent.zoom + 3)
+                                this.zoomOut = this.clusterFuck.get(new MapBounds(new MapLatLng(-3, -3), new MapLatLng(3, 3)), 1)
+                                this.zoomMedium = this.clusterFuck.get(new MapBounds(new MapLatLng(-3, -3), new MapLatLng(3, 3)), this.one.parent.zoom)
+                                this.zoomIn = this.clusterFuck.get(new MapBounds(new MapLatLng(-3, -3), new MapLatLng(3, 3)), this.one.parent.zoom + 3)
                             })
 
                             it('single cluster (zoomed out)', function () {
@@ -164,14 +164,14 @@ describe('Clustering', function () {
                                  */
                                 this.zoomOut[0].markers.should.have.length(1)
                                 this.zoomOut[0].zoom.should.be.above(1)
-                                this.cf.mutualAncestor(this.three, this.two).should.eql(this.zoomOut[0])
+                                this.clusterFuck.mutualAncestor(this.three, this.two).should.eql(this.zoomOut[0])
                             })
                         })
 
                         describe('bounds centred above one only', function () {
                             beforeEach(function () {
-                                this.single = this.cf.get(new MapBounds(new MapLatLng(-1.1, 0.9), new MapLatLng(-0.9, 1.1)), this.one.parent.zoom + 1)
-                                this.zoomOut = this.cf.get(new MapBounds(new MapLatLng(-1.1, 0.9), new MapLatLng(-0.9, 1.1)), this.one.parent.zoom - 3)
+                                this.single = this.clusterFuck.get(new MapBounds(new MapLatLng(-1.1, 0.9), new MapLatLng(-0.9, 1.1)), this.one.parent.zoom + 1)
+                                this.zoomOut = this.clusterFuck.get(new MapBounds(new MapLatLng(-1.1, 0.9), new MapLatLng(-0.9, 1.1)), this.one.parent.zoom - 3)
                             })
 
                             it('single marker when zoomed in', function () {

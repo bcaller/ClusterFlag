@@ -3,7 +3,6 @@ var overlays = [];
 var clusterFuck = new ClusterFlag.Clusterer(13, 1.1);
 var infowindow = new google.maps.InfoWindow({content: "NOTHING"})
 var map
-var clicked = false
 
 function populateClusterer(n) {
 
@@ -211,6 +210,7 @@ function addRandomData(num) {
     document.getElementById('ok').innerText = "Markers added:  " + j
 }
 
+var clicked = false
 
 document.getElementById('click').onclick = function() {
     if(clicked) return false
@@ -231,4 +231,5 @@ document.getElementById('clickless').onclick = function() {
     }, 3000)
     return false
 }
+
 renderMap();

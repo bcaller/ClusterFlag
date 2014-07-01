@@ -1,7 +1,7 @@
 ClusterFlag
 ===========
 
-Clusters LatLng points to allow a map to display different numbers of markers at different zoom levels. Built with the fast retrieval of hundreds of thousands of Google Maps markers in mind.
+[ClusterFlag](bcaller.github.io/ClusterFlag/) clusters LatLng points to allow a map to display different numbers of markers at different zoom levels. Built with the fast retrieval of hundreds of thousands of Google Maps markers in mind.
 
 Originally developed for a personal project [TheyHaveYour.Info](http://theyhaveyour.info) which required a clusterer for Google Maps capable of fast browsing and aggregation of 200,000+ map markers.
 

@@ -38,6 +38,7 @@ function populateClusterer(n) {
     var addMarkersDebounced = _.debounce(addMarkers, 350)
     google.maps.event.addListener(map, 'zoom_changed', addMarkersDebounced)
     google.maps.event.addListener(map, 'drag', addMarkersDebounced)
+    google.maps.event.addListener(map, 'dragend', addMarkersDebounced)
 }
 
 function renderMap() {

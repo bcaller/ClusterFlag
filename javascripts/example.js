@@ -1,6 +1,7 @@
 //Copyright 2014 Benjamin Caller
 var overlays = [];
-var clusterFuck = new ClusterFlag.Clusterer(13, 1.1);
+var MAXZOOM = 14;
+var clusterFuck = new ClusterFlag.Clusterer(MAXZOOM - 1, 1);
 var infowindow = new google.maps.InfoWindow({content: "NOTHING"})
 var map
 
@@ -57,12 +58,12 @@ function addMarkers() {
     clearOverlays()
 
     var zoom = map.getZoom()
-    if (zoom > 14) {
-        return map.setZoom(14)
+    if (zoom > MAXZOOM) {
+        return map.setZoom(MAXZOOM)
     }
     var toShow = clusterFuck.get(map.getBounds(), zoom)
 
-    var max = _.max(toShow, function(item) {
+    var max = _.max(toShow, function (item) {
         return item.count || 1
     }).count
 
@@ -73,11 +74,27 @@ function addMarkers() {
                 position: item.centreOfMass,
                 map: map,
                 title: "Cluster " + item.id + " contains " + item.count + " markers total (" + item.blueDescendants + " blue and " + item.redDescendants + " red)",
-                icon: getShape(item.overallColour, true, 1 + (item.count / max) * (item.count / max) )
+                icon: getShape(item.overallColour, true, 1 + (item.count / max) * (item.count / max))
             })
-            google.maps.event.addListener(marker, 'click', function () {
-                map.panTo(item.centreOfMass)
-                map.setZoom(zoom + 1)
+            google.maps.event.addListenerOnce(marker, 'click', function () {
+                var coords = [
+                    item.bounds.getSouthWest(),
+                    new google.maps.LatLng(item.bounds.getSouthWest().lat(), item.bounds.getNorthEast().lng()),
+                    item.bounds.getNorthEast(),
+                    new google.maps.LatLng(item.bounds.getNorthEast().lat(), item.bounds.getSouthWest().lng())
+                ];
+
+                // Construct the polygon.
+                overlays.push(new google.maps.Polygon({
+                    paths: coords,
+                    strokeColor: 'black',
+                    strokeOpacity: 0.9,
+                    strokeWeight: 2,
+                    fillColor: 'green',
+                    fillOpacity: 0.3,
+                    map: map
+                }))
+
             })
         } else {
             marker = new google.maps.Marker({
@@ -116,7 +133,6 @@ function getShape(colour, isCluster, size) {
 }
 
 
-
 var somelatlngs = [
     [32.7990, -86.8073],
     [40.5773, -77.2640],
@@ -130,48 +146,50 @@ var somelatlngs = [
     [42.7475, -107.2085],
     [41.1289, -98.2883],
     [48.858093, 2.294694],
-    [    54.6575    , -6.215833    ],
-    [    54.398889    , -7.651667    ],
-    [    54.618056    , -5.8725    ],
-    [    55.042778    , -7.161111    ],
-    [    52.453856    , -1.748028    ],
-    [    52.369722    , -1.479722    ],
-    [    51.894167    , -2.167222    ],
-    [    53.353744    , -2.27495    ],
-    [    50.440558    , -4.995408    ],
-    [    51.505144    , -1.993428    ],
-    [    51.009358    , -2.638819    ],
-    [    51.396667    , -3.343333    ],
-    [    51.605333    , -4.067833    ],
-    [    51.382669    , -2.719089    ],
-    [    53.333611    , -2.849722    ],
-    [    51.874722    , -0.368333    ],
-    [    50.422778    , -4.105833    ],
-    [    50.78    , -1.8425    ],
-    [    50.950261    , -1.356803    ],
-    [    51.187167    , -1.0335    ],
-    [    50.835556    , -0.297222    ],
-    [    51.330833    , 0.0325    ],
-    [    51.148056    , -0.190278    ],
-    [    51.505278    , 0.055278    ],
-    [    51.275833    , -0.776333    ],
-    [    51.323889    , -0.8475    ],
-    [    51.4775    , -0.461389    ],
-    [    51.571389    , 0.695556    ],
-    [    50.956111    , 0.939167    ],
-    [    51.342222    , 1.346111    ],
-    [    54.9375    , -2.809167    ],
-    [    53.771667    , -3.028611    ],
-    [    53.574444    , -0.350833    ],
-    [    54.131167    , -3.263667    ],
-    [    53.865897    , -1.660569    ],
-    [    53.178056    , -2.977778    ],
-    [    55.0375    , -1.691667    ],
-    [    54.509189    , -1.429406    ],
-    [    52.831111    , -1.328056    ],
-    [    58.957778    , -2.905    ],
-    [    50.45    , 30.5233    ]
-
+    [54.6575, -6.215833],
+    [54.398889, -7.651667],
+    [54.618056, -5.8725],
+    [55.042778, -7.161111],
+    [52.453856, -1.748028],
+    [52.369722, -1.479722],
+    [51.894167, -2.167222],
+    [53.353744, -2.27495],
+    [50.440558, -4.995408],
+    [51.505144, -1.993428],
+    [51.009358, -2.638819],
+    [51.396667, -3.343333],
+    [51.605333, -4.067833],
+    [51.382669, -2.719089],
+    [53.333611, -2.849722],
+    [51.874722, -0.368333],
+    [50.422778, -4.105833],
+    [50.78, -1.8425],
+    [50.950261, -1.356803],
+    [51.187167, -1.0335],
+    [50.835556, -0.297222],
+    [51.330833, 0.0325],
+    [51.148056, -0.190278],
+    [51.505278, 0.055278],
+    [51.275833, -0.776333],
+    [51.323889, -0.8475],
+    [51.4775, -0.461389],
+    [51.571389, 0.695556],
+    [50.956111, 0.939167],
+    [51.342222, 1.346111],
+    [54.9375, -2.809167],
+    [53.771667, -3.028611],
+    [53.574444, -0.350833],
+    [54.131167, -3.263667],
+    [53.865897, -1.660569],
+    [53.178056, -2.977778],
+    [55.0375, -1.691667],
+    [54.509189, -1.429406],
+    [52.831111, -1.328056],
+    [58.957778, -2.905],
+    [50.45, 30.5233],
+    [50.03597, -122.959],
+    [43.8345, -120.7178],
+    [38.2511, -85.7593]
 ];
 
 function addRandomData(num) {
@@ -211,21 +229,21 @@ function addRandomData(num) {
 
 var clicked = false
 
-document.getElementById('click').onclick = function() {
-    if(clicked) return false
+document.getElementById('click').onclick = function () {
+    if (clicked) return false
     clicked = true
     populateClusterer(1234);
-    window.setTimeout(function() {
+    window.setTimeout(function () {
         document.getElementById('ok').remove()
     }, 3000)
     return false
 }
 
-document.getElementById('clickless').onclick = function() {
-    if(clicked) return false
+document.getElementById('clickless').onclick = function () {
+    if (clicked) return false
     clicked = true
     populateClusterer(123);
-    window.setTimeout(function() {
+    window.setTimeout(function () {
         document.getElementById('ok').remove()
     }, 3000)
     return false
